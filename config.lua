@@ -2,14 +2,10 @@ Config = {}
 
 Config.Debug = false
 
--- UI framework configuration - Set these to match your server's resource names
+-- UI framework configuration - Simplified to only include target and fuel
 Config.UI = {
     target = 'ox_target',  -- Target system: 'ox_target', 'qb-target', 'qtarget', etc.
     fuel = 'lc_fuel',      -- Fuel system: 'lc_fuel', 'LegacyFuel', 'ps-fuel', etc.
-    notify = 'qb',         -- Notification system: 'qb' (qb-core), 'ox' (ox_lib), 'esx', 'custom', etc.
-    inventory = 'qb',      -- Inventory system: 'ps' (ps-inventory), 'qb' (qb-inventory), 'ox' (ox_inventory), etc.
-    menu = 'qb',           -- Menu system: 'qb' (qb-menu), 'ox' (ox_lib), 'nh-context', etc.
-    progressbar = 'qb',    -- Progress bar: 'qb' (qb-progressbar), 'ox' (ox_lib), etc.
 }
 
 -- Notifications templates
@@ -80,24 +76,6 @@ Config.Notifications = {
         type = "error",
         duration = 3000,
     },
-    tooFarFromVehicle = {
-        title = "CHOPSHOP",
-        message = "Get closer to the vehicle.",
-        type = "error",
-        duration = 3000,
-    },
-    vehicleSold = {
-        title = "CHOPSHOP",
-        message = "Vehicle sold for $%s",
-        type = "success",
-        duration = 5000,
-    },
-    personalVehicle = {
-        title = "CHOPSHOP",
-        message = "You cannot sell your personal vehicle here.",
-        type = "error",
-        duration = 5000,
-    }
 }
 
 -- General settings

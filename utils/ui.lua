@@ -1,8 +1,5 @@
-local Config = {}
-local configFile = LoadResourceFile(GetCurrentResourceName(), "config.lua")
-if configFile then
-    Config = load(configFile)() or {}
-end
+local QBCore = exports['qb-core']:GetCoreObject()
+local lib = exports.ox_lib
 
 local UI = {}
 
@@ -11,7 +8,7 @@ function UI.FormatString(str, ...)
     return string.format(str, ...)
 end
 
--- Notification handler
+-- Notification handler - Simplified to just use QBCore's notification system
 function UI.Notify(playerSource, data)
     if type(data) == "string" then
         data = {
@@ -21,38 +18,15 @@ function UI.Notify(playerSource, data)
         }
     end
 
-    if Config.UI.notify == 'qb' then
-        if playerSource then
-            TriggerClientEvent('QBCore:Notify', playerSource, data.message, data.type, data.duration)
-        else
-            exports['qb-core']:GetCoreObject().Functions.Notify(data.message, data.type, data.duration)
-        end
-    elseif Config.UI.notify == 'ox' then
-        if playerSource then
-            TriggerClientEvent('ox_lib:notify', playerSource, {
-                description = data.message,
-                type = data.type,
-                duration = data.duration
-            })
-        else
-            lib.notify({
-                description = data.message,
-                type = data.type,
-                duration = data.duration
-            })
-        end
-    elseif Config.UI.notify == 'esx' then
-        if playerSource then
-            TriggerClientEvent('esx:showNotification', playerSource, data.message)
-        else
-            exports['esx']:ShowNotification(data.message)
-        end
-    elseif Config.UI.notify == 'custom' then
-        -- Add your custom notification logic here
+    -- Default to QBCore notifications since we removed notify from config
+    if playerSource then
+        TriggerClientEvent('QBCore:Notify', playerSource, data.message, data.type, data.duration)
+    else
+        QBCore.Functions.Notify(data.message, data.type, data.duration)
     end
 end
 
--- Entity targeting
+-- Entity targeting - Keep this as is since we still have target in config
 function UI.AddEntityTarget(entity, options)
     print("^3[CHOPSHOP DEBUG]^7 Adding target to entity: " .. entity)
     
@@ -97,7 +71,7 @@ function UI.AddEntityTarget(entity, options)
     return false
 end
 
--- Set vehicle fuel
+-- Set vehicle fuel - Keep this as is since we still have fuel in config
 function UI.SetFuel(vehicle, level)
     if Config.UI.fuel == 'LegacyFuel' then
         exports['LegacyFuel']:SetFuel(vehicle, level)
@@ -108,6 +82,29 @@ function UI.SetFuel(vehicle, level)
     elseif Config.UI.fuel == 'ps-fuel' then
         exports['ps-fuel']:SetFuel(vehicle, level)
     end
+end
+
+-- Simplified ProgressBar function that just uses QBCore
+function UI.ProgressBar(data, cb)
+    -- Default to QBCore progressbar since we removed progressbar from config
+    exports['qb-progressbar']:Progress({
+        name = data.id or "progress_action",
+        duration = data.duration,
+        label = data.label,
+        useWhileDead = data.useWhileDead or false,
+        canCancel = data.canCancel or false,
+        controlDisables = {
+            disableMovement = data.disable and data.disable.move or true,
+            disableCarMovement = data.disable and data.disable.car or true,
+            disableMouse = data.disable and data.disable.mouse or false,
+            disableCombat = data.disable and data.disable.combat or true,
+        },
+        animation = {
+            animDict = data.anim and data.anim.dict or nil,
+            anim = data.anim and data.anim.clip or nil,
+            flags = data.anim and data.anim.flag or 1,
+        },
+    }, cb)
 end
 
 return UI

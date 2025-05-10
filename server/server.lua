@@ -17,6 +17,18 @@ else
     print("^1[MNS-CHOPSHOP]^7 Failed to load vehicle utils module")
 end
 
+-- Helper function for notifications
+local function NotifyPlayer(src, notification, formatArgs)
+    if not notification then return end
+    
+    local message = notification.message
+    if formatArgs then
+        message = string.format(message, table.unpack(formatArgs))
+    end
+    
+    TriggerClientEvent('QBCore:Notify', src, message, notification.type, notification.duration)
+end
+
 -- Register server events
 RegisterNetEvent('mns-chopshop:server:sellVehicle', function(plate, vehicleNetId, suggestedReward)
     local src = source
@@ -30,9 +42,8 @@ RegisterNetEvent('mns-chopshop:server:sellVehicle', function(plate, vehicleNetId
     -- Check if the vehicle is owned by a player
     exports.oxmysql:execute('SELECT 1 FROM player_vehicles WHERE plate = ? LIMIT 1', {plate}, function(result)
         if result and result[1] then
-            TriggerClientEvent('QBCore:Notify', src, Config.Notifications.personalVehicle.message, 
-                Config.Notifications.personalVehicle.type, 
-                Config.Notifications.personalVehicle.duration)
+            -- Using direct QBCore notification for personal vehicle
+            NotifyPlayer(src, Config.Notifications.personalVehicle)
         else
             -- Add security check for reward value
             local reward = suggestedReward
@@ -47,11 +58,8 @@ RegisterNetEvent('mns-chopshop:server:sellVehicle', function(plate, vehicleNetId
             -- Give reward
             Player.Functions.AddMoney('cash', reward)
             
-            -- Notify player
-            TriggerClientEvent('QBCore:Notify', src, 
-                string.format(Config.Notifications.vehicleSold.message, reward), 
-                Config.Notifications.vehicleSold.type, 
-                Config.Notifications.vehicleSold.duration)
+            -- Notify player with direct QBCore notification
+            NotifyPlayer(src, Config.Notifications.vehicleSold, {reward})
 
             -- Remove vehicle and keys on client
             TriggerClientEvent('mns-chopshop:client:deleteVehicle', src, vehicleNetId, plate)
@@ -77,11 +85,8 @@ RegisterNetEvent('mns-chopshop:server:addCash', function()
     -- Add money to player
     Player.Functions.AddMoney('cash', reward)
     
-    -- Notify player
-    TriggerClientEvent('QBCore:Notify', src, 
-        string.format(Config.Notifications.vehicleSold.message, reward), 
-        Config.Notifications.vehicleSold.type, 
-        Config.Notifications.vehicleSold.duration)
+    -- Notify player with direct QBCore notification
+    NotifyPlayer(src, Config.Notifications.vehicleSold, {reward})
     
     -- Log if debug is enabled
     if Config.Debug then
@@ -108,7 +113,7 @@ RegisterNetEvent('mns-chopshop:server:RewardPlayer', function(amount)
     -- Log the transaction
     DebugPrint("Player " .. src .. " received $" .. amount .. " from chopshop mission")
     
-    -- Send notification to player
+    -- Send notification to player using direct QBCore notification
     TriggerClientEvent('QBCore:Notify', src, "You received $" .. amount, "success")
 end)
 
