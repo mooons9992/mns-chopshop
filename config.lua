@@ -4,12 +4,12 @@ Config.Debug = false
 
 -- UI framework configuration
 Config.UI = {
-    target = 'ox_target',    -- Options: 'ox_target', 'qb-target'
-    fuel = 'lc_fuel',        -- Options: 'LegacyFuel', 'cdn-fuel', 'lc_fuel', 'ps-fuel'
-    notify = 'qb',          -- Options: 'qb', 'ox', 'esx', 'custom'
-    inventory = 'ps',       -- Options: 'qb', 'ox_inventory', 'qs-inventory'
-    menu = 'qb',            -- Options: 'qb', 'ox', 'nh-context'
-    progressbar = 'qb',     -- Options: 'qb', 'ox'
+    target = 'ox_target',  -- CHANGE THIS from 'ox_target' to match your export name
+    fuel = 'lc_fuel',
+    notify = 'qb',
+    inventory = 'ps',
+    menu = 'qb',
+    progressbar = 'qb',
 }
 
 -- Notifications templates
@@ -114,7 +114,8 @@ Config.SellVehicleEnabled = true -- Allow selling non-mission vehicles
 Config.Ped = {
     model = "g_m_m_armgoon_01", -- PED Model
     location = vector4(476.4, -1315.28, 28.225, 255.99), -- Hayes Auto by MRPD
-    scenario = "WORLD_HUMAN_SMOKING" -- Ped animation
+    scenario = "WORLD_HUMAN_SMOKING", -- Ped animation
+    disableGroundSnap = false -- Set to true if you want to manually position the Z coordinate
 }
 
 -- Delivery locations
@@ -127,6 +128,7 @@ Config.DeliveryLocations = {
 Config.Mission = {
     Radius = 100.0, -- Search area radius for finding the vehicle
     Cooldown = 300, -- Time between missions in seconds
+    TimeLimit = 300, -- Time limit to deliver the vehicle in seconds (5 minutes)
     
     Blip = {
         Sprite = 161,
@@ -135,50 +137,74 @@ Config.Mission = {
     },
     
     VehicleModels = {
+        -- Expanded vehicle list with 20+ options
+        
         -- Supercars
-        "prototipo",     -- X80 Proto
-        "t20",           -- Progen T20
         "zentorno",      -- Pegassi Zentorno
         "adder",         -- Truffade Adder
-        "cheetah",       -- Grotti Cheetah
-        "entityxf",      -- Overflod Entity XF
-        "fmj",           -- Vapid FMJ
-        "osiris",        -- Pegassi Osiris
-        "pfister811",    -- Pfister 811
-        "reaper",        -- Pegassi Reaper
-        "sultanrs",      -- Sultan RS
+        "EntityXF",      -- Overflod Entity XF
+        "t20",           -- Progen T20
         
         -- Sports cars
-        "schlagen",      -- Schlagen GT
-        "jugular",       -- Jugular
-        "paragon",       -- Paragon
-        "comet5",        -- Comet SR
-        "kuruma",        -- Kuruma
-        "buffalo3",      -- Sprunk Buffalo
+        "neon",          -- Pfister Neon
+        "schlagen",      -- Benefactor Schlagen GT
+        "pariah",        -- Ocelot Pariah
+        "comet2",        -- Pfister Comet
+        "tampa2",        -- Declasse Drift Tampa
         
         -- Muscle cars
-        "dominator",     -- Dominator
-        "gauntlet",      -- Gauntlet
-        "sabregt",       -- Sabre GT
-        "vigero",        -- Vigero
-        "dukes",         -- Dukes
+        "dominator",     -- Vapid Dominator
+        "gauntlet",      -- Bravado Gauntlet
+        "sabregt",       -- Declasse Sabre Turbo
+        "vigero",        -- Declasse Vigero
+        "dukes",         -- Imponte Dukes
+        "blade",         -- Vapid Blade
+        
+        -- Sedans
+        "tailgater",     -- Obey Tailgater
+        "primo",         -- Albany Primo
+        "fugitive",      -- Cheval Fugitive
+        "intruder",      -- Karin Intruder
+        
+        -- Coupes
+        "windsor",       -- Enus Windsor
+        "exemplar",      -- Dewbauchee Exemplar
+        "felon",         -- Lampadati Felon
+        
+        -- SUVs
+        "baller",        -- Gallivanter Baller
+        "cavalcade",     -- Albany Cavalcade
+        "granger",       -- Declasse Granger
+        "huntley",       -- Enus Huntley S
+        
+        -- Compacts
+        "blista",        -- Dinka Blista
+        "brioso",        -- Grotti Brioso R/A
+        "issi2",         -- Weeny Issi
+        "panto",         -- Benefactor Panto
     },
     
     SpawnLocations = {
-        -- Mission Row PD
+        -- Downtown
         vector4(286.63, -1036.36, 29.07, 89.83),
         -- La Mesa
         vector4(948.59, -1698.46, 29.65, 82.71),
         -- Popular Street
         vector4(802.95, -1354.56, 25.45, 88.43),
         -- Strawberry
-        vector4(-310.09, -770.65, 33.15, 2.24),
+        vector4(176.41, -1549.56, 29.26, 44.13),
         -- Davis
         vector4(324.6, -2012.99, 20.47, 318.38),
         -- Del Perro
         vector4(-1590.95, -817.45, 9.28, 140.53),
         -- Mirror Park
         vector4(1198.83, -1264.61, 34.56, 177.61),
+        -- Sandy Shores
+        vector4(1986.36, 3793.54, 32.18, 120.41),
+        -- Harmony
+        vector4(576.34, 2790.6, 42.13, 3.14),
+        -- Paleto Bay
+        vector4(-106.7, 6349.67, 31.49, 40.64)
     }
 }
 

@@ -1,21 +1,26 @@
 # MNS ChopShop
+
 A feature-rich vehicle chopshop system for FiveM servers running QBCore/QBox frameworks.
 
 ## Features
-- **Sell Stolen Vehicles**: Sell non-owned vehicles for cash rewards based on vehicle class and condition
-- **Mission System**: Take on missions to steal specific vehicles for larger rewards
+
+- **Stolen Vehicle Missions**: Complete missions to find and deliver stolen vehicles for cash rewards
+- **Search & Find System**: Vehicles spawn in a radius area - you need to search to find them
+- **Time Pressure**: 5-minute time limit to find and deliver the vehicle before it breaks down
+- **Vehicle Variety**: 30+ different vehicle models that can appear in missions
+- **Dynamic Rewards**: Payment based on vehicle class, condition, and damage
+- **Random Vehicle Condition**: Each vehicle has randomized damage, fuel levels, and appearance
 - **Multi-Framework Support**: Compatible with both QBCore and OX components
-- **Dynamic Vehicle Value**: Vehicle rewards calculated based on performance stats and damage
-- **Anti-Exploit Mechanisms**: Prevents players from selling owned vehicles or exploiting the system
-- **Performance Optimized**: Minimally impacts server performance
 
 ## Dependencies
+
 - QBCore or QBox framework
 - oxmysql
 - Target system (supports both ox_target and qb-target)
 - Fuel system (supports LegacyFuel, cdn-fuel, lc_fuel, and ps-fuel)
 
 ## Installation
+
 1. Download the latest release
 2. Extract to your resources folder
 3. Add `ensure mns-chopshop` to your server.cfg
@@ -23,28 +28,46 @@ A feature-rich vehicle chopshop system for FiveM servers running QBCore/QBox fra
 
 ## Usage
 
-### Sell Stolen Vehicles
-1. Find or steal a vehicle that isn't player-owned
-2. Drive it to the chopshop NPC
-3. Interact with the NPC using the target system
-4. Receive a cash reward based on the vehicle's condition and class
-
-### Complete Missions
-1. Talk to the chopshop NPC to start a mission
-2. Locate and steal the specified vehicle
-3. Return it to the chopshop for a reward
-4. Complete the mission before the timeout expires
+### Complete Chopshop Missions
+1. Talk to the chopshop NPC at Hayes Auto to start a mission
+2. A radius circle will appear on your map showing the general area where the vehicle is located
+3. Search within the radius to find the vehicle (the exact vehicle location is not marked)
+4. Once you find and enter the vehicle, a delivery marker will appear
+5. Deliver the vehicle to the dropoff location within the time limit (default: 5 minutes)
+6. Receive a cash reward based on the vehicle's class and condition
 
 ## Configuration
+
 The script includes extensive configuration options:
 
-- UI framework selection (QBCore, OX, or custom)
-- Notification templates and messaging
-- Reward calculations and multipliers
-- Vehicle spawn locations and models
-- NPC appearance and positioning
+```lua
+-- Mission system configuration
+Config.Mission = {
+   Radius = 100.0,       -- Search area radius for finding the vehicle
+   Cooldown = 300,       -- Time between missions in seconds
+   TimeLimit = 300,      -- Time limit to deliver the vehicle in seconds (5 minutes)
+   
+   -- Vehicle models that can appear in missions (30+ options)
+   VehicleModels = {
+      -- Supercars
+      "zentorno",       -- Pegassi Zentorno
+      "adder",          -- Truffade Adder
+      -- And many more...
+   },
+   
+   -- Random spawn locations around the city
+   SpawnLocations = {
+      -- Downtown
+      vector4(286.63, -1036.36, 29.07, 89.83),
+      -- La Mesa
+      vector4(948.59, -1698.46, 29.65, 82.71),
+      -- And more locations...
+   }
+}
+```
 
 ## Framework Compatibility
+
 MNS ChopShop can work with different UI components:
 
 ```lua
@@ -59,15 +82,16 @@ Config.UI = {
 ```
 
 ## Admin Commands
+
 - `/forcechopshop` - Force start a chopshop mission (Admin only)
 
-## Version History
-### 1.0.0
-- Initial release
-- Multi-framework support
-- Dynamic vehicle value calculation
-- Mission system with random vehicles
-- Version checker
+## Vehicle Features
+
+- **Dynamic Damage System**: Vehicles spawn with randomized engine and body damage
+- **Random Appearance**: Includes random dirt levels, broken windows or doors
+- **Variable Fuel Levels**: Each vehicle has a different amount of fuel (20-80%)
+- **Vehicle Classes**: Reward multipliers based on vehicle class (supercars pay more than sedans)
 
 ## Support
-For support or questions about this script or other scripts, join our Discord server: [Join Discord](https://discord.gg/yourlink)
+
+For support or questions about this script or other scripts, join our [Discord server](https://discord.gg/example)

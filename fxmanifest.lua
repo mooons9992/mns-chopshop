@@ -1,33 +1,33 @@
 fx_version 'cerulean'
 game 'gta5'
 
-name 'mns-chopshop'
 author 'Mooons'
+description 'MNS Chopshop Script'
 version '1.0.0'
 
-description 'Advanced Chopshop Mission and Vehicle Selling System'
-repository 'https://github.com/mooons9992/mns-chopshop'
-
-lua54 'yes'
-
 shared_scripts {
-    '@oxmysql/lib/MySQL.lua',
-    '@qb-core/shared/locale.lua',
-    'config.lua',
-    'utils/*.lua'
+    'config.lua'
 }
 
 client_scripts {
-    'client/*.lua',
+    'utils/ui.lua',
+    'utils/vehicle.lua',
+    'client/client.lua',
+    'client/targets.lua' -- Add this new file
 }
 
 server_scripts {
     'server/sv_version.lua',
-    'server/*.lua'
+    'server/server.lua'
 }
 
 dependencies {
-    'qb-core',
-    'oxmysql'
+    'qb-core'
+}
+
+exports {
+    'StartMission',
+    'EndMission',
+    'SellVehicleToChopshop'
 }
 
