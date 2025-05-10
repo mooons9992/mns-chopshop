@@ -2,14 +2,14 @@ Config = {}
 
 Config.Debug = false
 
--- UI framework configuration
+-- UI framework configuration - Set these to match your server's resource names
 Config.UI = {
-    target = 'ox_target',  -- CHANGE THIS from 'ox_target' to match your export name
-    fuel = 'lc_fuel',
-    notify = 'qb',
-    inventory = 'ps',
-    menu = 'qb',
-    progressbar = 'qb',
+    target = 'ox_target',  -- Target system: 'ox_target', 'qb-target', 'qtarget', etc.
+    fuel = 'lc_fuel',      -- Fuel system: 'lc_fuel', 'LegacyFuel', 'ps-fuel', etc.
+    notify = 'qb',         -- Notification system: 'qb' (qb-core), 'ox' (ox_lib), 'esx', 'custom', etc.
+    inventory = 'qb',      -- Inventory system: 'ps' (ps-inventory), 'qb' (qb-inventory), 'ox' (ox_inventory), etc.
+    menu = 'qb',           -- Menu system: 'qb' (qb-menu), 'ox' (ox_lib), 'nh-context', etc.
+    progressbar = 'qb',    -- Progress bar: 'qb' (qb-progressbar), 'ox' (ox_lib), etc.
 }
 
 -- Notifications templates
