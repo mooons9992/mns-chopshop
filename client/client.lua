@@ -6,6 +6,7 @@ local missionRadiusBlip = nil
 local isOnMission = false
 local lastMissionTime = 0
 local missionTimeout = nil
+local missionDeliveryLocation = nil
 
 -- Debug print function
 local function DebugPrint(msg)
@@ -187,17 +188,47 @@ local function CleanupMission()
         missionRadiusBlip = nil
     end
     
-    if missionTimeout then
-        if missionTimeout then clearTimeout(missionTimeout) end
-        missionTimeout = nil
-    end
-    
     missionVehicle = nil
     isOnMission = false
 end
 
+-- Get delivery location that's far from start location
+local function GetFarDeliveryLocation(startCoords)
+    -- Create a copy of delivery locations
+    local availableLocations = {}
+    for _, location in pairs(Config.DeliveryLocations) do
+        table.insert(availableLocations, location)
+    end
+    
+    -- Shuffle the locations for more randomness
+    for i = #availableLocations, 2, -1 do
+        local j = math.random(i)
+        availableLocations[i], availableLocations[j] = availableLocations[j], availableLocations[i]
+    end
+    
+    -- Find a location that's far enough from the start
+    local minDistance = 1000.0 -- Minimum distance in units
+    local bestLocation = nil
+    
+    for _, location in pairs(availableLocations) do
+        local distance = #(vector3(startCoords.x, startCoords.y, startCoords.z) - 
+                          vector3(location.x, location.y, location.z))
+        
+        if distance > minDistance then
+            return location
+        end
+        
+        -- If we can't find any location far enough, just use the first one
+        if not bestLocation then
+            bestLocation = location
+        end
+    end
+    
+    return bestLocation or availableLocations[1]
+end
+
 -- Start a mission
-function StartMission()
+function StartMission(startLocation)
     -- Check if player is already on a mission
     if isOnMission then
         Notify("You are already on a mission.", "error")
@@ -242,33 +273,8 @@ function StartMission()
         isOnMission = true
         lastMissionTime = currentTime
         
-        -- Setup mission timeout - using Config.Mission.TimeLimit for the delivery time limit
-        missionTimeout = setTimeout(function()
-            if isOnMission then
-                -- Disable the vehicle
-                if DoesEntityExist(missionVehicle) then
-                    SetVehicleEngineHealth(missionVehicle, -4000)
-                    SetVehicleEngineOn(missionVehicle, false, true, true)
-                    SetVehicleUndriveable(missionVehicle, true)
-                    -- Start smoke effect from engine
-                    NetworkExplodeVehicle(missionVehicle, false, false, false)
-                    SetVehicleDoorsLocked(missionVehicle, 2) -- Lock doors
-                end
-                
-                -- Notify failure
-                Notify("Mission failed! You ran out of time to deliver the vehicle.", "error")
-                
-                -- Wait a moment then cleanup
-                Wait(10000) -- Allow player to see the disabled vehicle for 10 seconds
-                CleanupMission()
-            end
-        end, Config.Mission.TimeLimit * 1000)
-        
         -- Show success notification
         Notify("Mission started! Find the marked vehicle within the radius.", "success")
-        
-        -- Show timer notification
-        Notify("You have " .. Config.Mission.TimeLimit .. " seconds to deliver the vehicle!", "primary")
         
         -- Start a thread to check when player gets into the vehicle
         CreateThread(function()
@@ -279,22 +285,9 @@ function StartMission()
                 if GetPedInVehicleSeat(missionVehicle, -1) == PlayerPedId() then
                     SetBlipDisplay(missionBlip, 4) -- Make it visible on map
                     
-                    -- Create a marker at the delivery location
-                    local deliveryLocation = Config.DeliveryLocations[1] -- Using first delivery location
-                    local deliveryBlip = CreateBlip(
-                        deliveryLocation,
-                        431, -- Blip sprite (wrench)
-                        5,  -- Color (yellow)
-                        1.0,
-                        "Vehicle Delivery"
-                    )
-                    
-                    -- Notify player
-                    Notify("Vehicle found! Deliver it to the marked location.", "success")
-                    
-                    -- Display remaining time
-                    local timeRemaining = math.floor((missionTimeout._created + missionTimeout._time - GetGameTimer()) / 1000)
-                    Notify("Time remaining: " .. timeRemaining .. " seconds", "primary")
+                    -- Don't create a delivery blip - removed this section
+                    -- Instead, notify player they can deliver to any chopshop
+                    Notify("Vehicle found! Deliver it to any chopshop location.", "success")
                     
                     -- Break the loop - we only need to run this once
                     break
@@ -320,12 +313,22 @@ function DeliverVehicle()
     end
     
     -- Check if in delivery zone
-    local deliveryLocation = vector3(Config.DeliveryLocations[1].x, Config.DeliveryLocations[1].y, Config.DeliveryLocations[1].z)
     local playerPos = GetEntityCoords(PlayerPedId())
-    local distance = #(playerPos - deliveryLocation)
+    local isNearDelivery = false
     
-    if distance > Config.DeliveryRadius then
-        Notify("Move closer to the delivery point.", "error")
+    -- Check all delivery locations, as the player might deliver to any
+    for _, location in pairs(Config.DeliveryLocations) do
+        local deliveryLocation = vector3(location.x, location.y, location.z)
+        local distance = #(playerPos - deliveryLocation)
+        
+        if distance <= Config.DeliveryRadius then
+            isNearDelivery = true
+            break
+        end
+    end
+    
+    if not isNearDelivery then
+        Notify("Move closer to a delivery point.", "error")
         return
     end
     
@@ -362,130 +365,134 @@ function DeliverVehicle()
     end)
 end
 
--- Initialize QBCore player data
-AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
-    PlayerData = QBCore.Functions.GetPlayerData()
-end)
-
--- Event handler for player unload
-AddEventHandler('QBCore:Client:OnPlayerUnload', function()
-    CleanupMission()
-end)
-
--- Event handler for resource stop
-AddEventHandler('onResourceStop', function(resourceName)
-    if (GetCurrentResourceName() ~= resourceName) then return end
-    CleanupMission()
-end)
-
--- Create delivery point
+-- Create delivery points and NPCs
 CreateThread(function()
     Wait(1000) -- Wait for everything to initialize
     
-    -- Create a blip at the delivery location
-    local deliveryLocation = Config.DeliveryLocations[1]
-    local blip = AddBlipForCoord(deliveryLocation.x, deliveryLocation.y, deliveryLocation.z)
-    SetBlipSprite(blip, 527) -- Wrench icon
-    SetBlipDisplay(blip, 4)
-    SetBlipScale(blip, 0.7)
-    SetBlipColour(blip, 47) -- Orange color
-    SetBlipAsShortRange(blip, true)
-    BeginTextCommandSetBlipName("STRING")
-    AddTextComponentSubstringPlayerName("Chopshop")
-    EndTextCommandSetBlipName(blip)
-    
-    -- Create the delivery ped
-    local pedCoords = Config.Ped.location
-    RequestModel(GetHashKey(Config.Ped.model))
-    
-    while not HasModelLoaded(GetHashKey(Config.Ped.model)) do
-        Wait(0)
-    end
-    
-    -- Fix for NPC being halfway in the ground by properly adjusting Z position
-    local groundZ = pedCoords.z
-    if not Config.Ped.disableGroundSnap then
-        -- Get ground Z properly
-        local success, groundZ = GetGroundZFor_3dCoord(pedCoords.x, pedCoords.y, pedCoords.z, false)
-        if not success then
-            groundZ = pedCoords.z -- Fallback to original if ground detection fails
+    -- Create NPCs at all locations
+    for i, location in ipairs(Config.NPCLocations) do
+        -- Create a blip for each location
+        local blip = AddBlipForCoord(location.x, location.y, location.z)
+        SetBlipSprite(blip, 527) -- Wrench icon
+        SetBlipDisplay(blip, 4)
+        SetBlipScale(blip, 0.7)
+        SetBlipColour(blip, 47) -- Orange color
+        SetBlipAsShortRange(blip, true)
+        BeginTextCommandSetBlipName("STRING")
+        AddTextComponentSubstringPlayerName("Chopshop") -- Removed the number to group all blips
+        EndTextCommandSetBlipName(blip)
+        
+        -- Create the NPC
+        local pedCoords = location
+        RequestModel(GetHashKey(Config.Ped.model))
+        
+        while not HasModelLoaded(GetHashKey(Config.Ped.model)) do
+            Wait(0)
         end
-    end
-    
-    -- Create the ped with proper Z coordinate
-    local ped = CreatePed(4, GetHashKey(Config.Ped.model), pedCoords.x, pedCoords.y, groundZ, pedCoords.w, false, true)
-    FreezeEntityPosition(ped, true)
-    SetEntityInvincible(ped, true)
-    SetBlockingOfNonTemporaryEvents(ped, true)
-    TaskStartScenarioInPlace(ped, Config.Ped.scenario, 0, true)
-    
-    -- Add interaction with ped using ox_target
-    if Config.UI.target == 'ox_target' then
-        exports.ox_target:addLocalEntity(ped, {
-            {
-                name = 'chopshop_start_mission',
-                icon = 'fas fa-car',
-                label = 'Start Mission',
-                onSelect = function()
-                    StartMission()
-                end
-            },
-            {
-                name = 'chopshop_deliver_vehicle',
-                icon = 'fas fa-truck-loading',
-                label = 'Deliver Vehicle',
-                onSelect = function()
-                    DeliverVehicle()
-                end
-            }
-        })
-    elseif Config.UI.target == 'qb-target' then
-        exports['qb-target']:AddTargetEntity(ped, {
-            options = {
+        
+        -- Fix for NPC being halfway in the ground by properly adjusting Z position
+        local groundZ = pedCoords.z
+        if not Config.Ped.disableGroundSnap then
+            -- Get ground Z properly
+            local success, groundZ = GetGroundZFor_3dCoord(pedCoords.x, pedCoords.y, pedCoords.z, false)
+            if not success then
+                groundZ = pedCoords.z -- Fallback to original if ground detection fails
+            end
+        end
+        
+        -- Create the ped with proper Z coordinate
+        local ped = CreatePed(4, GetHashKey(Config.Ped.model), pedCoords.x, pedCoords.y, groundZ, pedCoords.w, false, true)
+        FreezeEntityPosition(ped, true)
+        SetEntityInvincible(ped, true)
+        SetBlockingOfNonTemporaryEvents(ped, true)
+        
+        -- Give each NPC a slightly different animation
+        local scenarios = {
+            "WORLD_HUMAN_SMOKING",
+            "WORLD_HUMAN_STAND_IMPATIENT",
+            "WORLD_HUMAN_STAND_MOBILE",
+            "WORLD_HUMAN_CLIPBOARD"
+        }
+        local scenario = scenarios[math.random(#scenarios)]
+        TaskStartScenarioInPlace(ped, scenario, 0, true)
+        
+        -- Store the location for reference when starting a mission
+        local thisLocation = location
+        
+        -- Add interaction with ped using ox_target
+        if Config.UI.target == 'ox_target' then
+            exports.ox_target:addLocalEntity(ped, {
                 {
-                    type = "client",
+                    name = 'chopshop_start_mission_' .. i,
                     icon = 'fas fa-car',
                     label = 'Start Mission',
-                    action = function()
-                        StartMission()
+                    onSelect = function()
+                        StartMission(thisLocation)
                     end
                 },
                 {
-                    type = "client",
+                    name = 'chopshop_deliver_vehicle_' .. i,
                     icon = 'fas fa-truck-loading',
                     label = 'Deliver Vehicle',
-                    action = function()
+                    onSelect = function()
                         DeliverVehicle()
                     end
                 }
-            },
-            distance = 2.5
-        })
-    else
-        -- Fallback to basic interaction when no target system is available
-        while true do
-            Wait(0)
-            local plyCoords = GetEntityCoords(PlayerPedId())
-            local dist = #(plyCoords - vector3(pedCoords.x, pedCoords.y, pedCoords.z))
-            
-            if dist < 2.0 then
-                DrawText3D(pedCoords.x, pedCoords.y, pedCoords.z + 1.0, "Press [E] to interact")
-                if IsControlJustPressed(0, 38) then -- E key
-                    local elements = {}
+            })
+        elseif Config.UI.target == 'qb-target' then
+            exports['qb-target']:AddTargetEntity(ped, {
+                options = {
+                    {
+                        type = "client",
+                        icon = 'fas fa-car',
+                        label = 'Start Mission',
+                        action = function()
+                            StartMission(thisLocation)
+                        end
+                    },
+                    {
+                        type = "client",
+                        icon = 'fas fa-truck-loading',
+                        label = 'Deliver Vehicle',
+                        action = function()
+                            DeliverVehicle()
+                        end
+                    }
+                },
+                distance = 2.5
+            })
+        else
+            -- Fallback to basic interaction when no target system is available
+            -- We create a separate thread for each NPC to handle interactions
+            CreateThread(function()
+                while true do
+                    Wait(0)
+                    local plyCoords = GetEntityCoords(PlayerPedId())
+                    local dist = #(plyCoords - vector3(pedCoords.x, pedCoords.y, pedCoords.z))
                     
-                    if isOnMission then
-                        table.insert(elements, {header = "Deliver Vehicle", params = {event = "mns-chopshop:client:DeliverVehicle"}})
+                    if dist < 2.0 then
+                        DrawText3D(pedCoords.x, pedCoords.y, pedCoords.z + 1.0, "Press [E] to interact")
+                        if IsControlJustPressed(0, 38) then -- E key
+                            local elements = {}
+                            
+                            if isOnMission then
+                                table.insert(elements, {header = "Deliver Vehicle", params = {event = "mns-chopshop:client:DeliverVehicle"}})
+                            else
+                                table.insert(elements, {header = "Start Mission", params = {
+                                    event = "mns-chopshop:client:StartMission", 
+                                    args = {location = thisLocation}
+                                }})
+                            end
+                            
+                            exports['qb-menu']:openMenu(elements)
+                        end
+                    elseif dist < 10.0 then
+                        DrawMarker(2, pedCoords.x, pedCoords.y, pedCoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.3, 0.3, 255, 50, 50, 100, false, true, 2, false, nil, nil, false)
                     else
-                        table.insert(elements, {header = "Start Mission", params = {event = "mns-chopshop:client:StartMission"}})
+                        Wait(1000)
                     end
-                    
-                    exports['qb-menu']:openMenu(elements)
                 end
-            elseif dist < 10.0 then
-                DrawMarker(2, pedCoords.x, pedCoords.y, pedCoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.3, 0.3, 255, 50, 50, 100, false, true, 2, false, nil, nil, false)
-            else
-                Wait(1000)
-            end
+            end)
         end
     end
 end)
@@ -540,8 +547,9 @@ function clearTimeout(t)
 end
 
 -- Register events for client-side menu interactions
-RegisterNetEvent('mns-chopshop:client:StartMission', function()
-    StartMission()
+RegisterNetEvent('mns-chopshop:client:StartMission', function(data)
+    local location = data and data.location
+    StartMission(location)
 end)
 
 RegisterNetEvent('mns-chopshop:client:DeliverVehicle', function()

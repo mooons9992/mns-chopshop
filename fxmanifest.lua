@@ -13,7 +13,8 @@ client_scripts {
     'utils/ui.lua',
     'utils/vehicle.lua',
     'client/client.lua',
-    'client/targets.lua' -- Add this new file
+    -- Comment out one of these files to prevent duplicate NPCs
+    -- 'client/targets.lua'
 }
 
 server_scripts {

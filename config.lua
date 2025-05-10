@@ -118,10 +118,30 @@ Config.Ped = {
     disableGroundSnap = false -- Set to true if you want to manually position the Z coordinate
 }
 
--- Delivery locations
+-- Multiple NPC locations around the map
+Config.NPCLocations = {
+    -- City locations
+    vector4(476.4, -1315.28, 28.225, 255.99),    -- Hayes Auto (Original location)
+    vector4(947.59, -1697.93, 29.98, 85.31),     -- La Mesa Garage
+    vector4(-1428.14, -444.77, 35.53, 210.76),   -- Great Chaparral / Kortz Center
+    vector4(1182.53, 2636.41, 37.75, 95.68),     -- Harmony Repair Shop
+    vector4(106.21, 6627.77, 31.78, 224.91),     -- Paleto Bay Repair Shop
+    vector4(731.7, -1088.84, 22.17, 88.78),      -- Little Seoul garage
+    vector4(-580.95, -1796.84, 22.74, 231.46),   -- LSIA area garage
+    vector4(2340.65, 3126.46, 48.21, 359.57),    -- Sandy Shores garage
+}
+
+-- Delivery locations (can be the same as NPC locations)
 Config.DeliveryLocations = {
-    -- Hayes Auto by MRPD
-    vector4(476.4, -1315.28, 28.225, 255.99),
+    -- Same locations as NPCs for simplicity
+    vector4(476.4, -1315.28, 28.225, 255.99),    -- Hayes Auto
+    vector4(947.59, -1697.93, 29.98, 85.31),     -- La Mesa Garage
+    vector4(-1428.14, -444.77, 35.53, 210.76),   -- Great Chaparral / Kortz Center
+    vector4(1182.53, 2636.41, 37.75, 95.68),     -- Harmony Repair Shop
+    vector4(106.21, 6627.77, 31.78, 224.91),     -- Paleto Bay Repair Shop
+    vector4(731.7, -1088.84, 22.17, 88.78),      -- Little Seoul garage
+    vector4(-580.95, -1796.84, 22.74, 231.46),   -- LSIA area garage
+    vector4(2340.65, 3126.46, 48.21, 359.57),    -- Sandy Shores garage
 }
 
 -- Mission system configuration
