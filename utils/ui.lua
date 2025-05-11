@@ -86,25 +86,27 @@ end
 
 -- Simplified ProgressBar function that just uses QBCore
 function UI.ProgressBar(data, cb)
-    -- Default to QBCore progressbar since we removed progressbar from config
-    exports['qb-progressbar']:Progress({
-        name = data.id or "progress_action",
-        duration = data.duration,
-        label = data.label,
-        useWhileDead = data.useWhileDead or false,
-        canCancel = data.canCancel or false,
-        controlDisables = {
+    QBCore.Functions.Progressbar(
+        data.id or "progress_action",
+        data.label,
+        data.duration,
+        data.useWhileDead or false,
+        data.canCancel or false,
+        {
             disableMovement = data.disable and data.disable.move or true,
             disableCarMovement = data.disable and data.disable.car or true,
             disableMouse = data.disable and data.disable.mouse or false,
             disableCombat = data.disable and data.disable.combat or true,
         },
-        animation = {
+        {
             animDict = data.anim and data.anim.dict or nil,
             anim = data.anim and data.anim.clip or nil,
             flags = data.anim and data.anim.flag or 1,
         },
-    }, cb)
+        {},
+        {},
+        cb
+    )
 end
 
 return UI

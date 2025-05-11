@@ -298,19 +298,12 @@ function DeliverVehicle()
     TaskLeaveVehicle(PlayerPedId(), missionVehicle, 0)
     Wait(1500)
     
-    exports['qb-progressbar']:Progress({
-        name = "deliver_vehicle",
-        duration = 5000,
-        label = "Processing vehicle...",
-        useWhileDead = false,
-        canCancel = true,
-        controlDisables = {
-            disableMovement = true,
-            disableCarMovement = true,
-            disableMouse = false,
-            disableCombat = true,
-        },
-    }, function(cancelled)
+    QBCore.Functions.Progressbar("deliver_vehicle", "Processing vehicle...", 5000, false, true, {
+        disableMovement = true,
+        disableCarMovement = true,
+        disableMouse = false,
+        disableCombat = true,
+    }, {}, {}, {}, function(cancelled)
         if not cancelled then
             TriggerServerEvent('mns-chopshop:server:RewardPlayer', reward)
             
